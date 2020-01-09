@@ -1,0 +1,92 @@
+var soil;
+var matrix;
+var buzzer;
+
+function buzzer_music(m) {
+  var musicNotes = {};
+  musicNotes.notes = [];
+  musicNotes.tempos = [];
+  if (m[0].notes.length > 1) {
+    for (var i = 0; i < m.length; i++) {
+      if (Array.isArray(m[i].notes)) {
+        var cn = musicNotes.notes.concat(m[i].notes);
+        musicNotes.notes = cn;
+      } else {
+        musicNotes.notes.push(m[i].notes);
+      }
+      if (Array.isArray(m[i].tempos)) {
+        var ct = musicNotes.tempos.concat(m[i].tempos);
+        musicNotes.tempos = ct;
+      } else {
+        musicNotes.tempos.push(m[i].tempos);
+      }
+    }
+  } else {
+    musicNotes.notes = [m[0].notes];
+    musicNotes.tempos = [m[0].tempos];
+  }
+  return musicNotes;
+}
+
+
+boardReady({device: 'YGwk7'}, function (board) {
+  board.systemReset();
+  board.samplingInterval = 250;
+  soil = getSoil(board, 3);
+  matrix = getMax7219(board, 7, 8, 9);
+  buzzer = getBuzzer(board, 10);
+  function speechRecognition(){
+    if (!("webkitSpeechRecognition" in window)) {
+      alert("本瀏覽器不支援語音辨識，請更換瀏覽器！(Chrome 25 版以上才支援語音辨識)");
+    } else{
+      window._recognition = new webkitSpeechRecognition();
+      window._recognition.continuous = true;
+      window._recognition.interimResults = true;
+      window._recognition.lang = "cmn-Hant-TW";
+
+      window._recognition.onstart = function() {
+        window._recognition.status = true;
+        console.log("Start recognize...");
+      };
+
+      window._recognition.onend = function() {
+        console.log("Stop recognize");
+        if(window._recognition.status){
+           window._recognition.start();
+        }
+      };
+
+      window._recognition.onresult = function(event,result) {
+        result = {};
+        result.resultLength = event.results.length-1;
+        result.resultTranscript = event.results[result.resultLength][0].transcript;
+        if(event.results[result.resultLength].isFinal===false){
+          console.log(result.resultTranscript);
+            document.getElementById("demo-area-01-show").innerHTML = result.resultTranscript;
+    if(result.resultTranscript.indexOf("小花你需要喝水了嗎")!== -1){
+              soil.on(function(val){
+        soil.detectedVal = val;
+        document.getElementById("demo-area-01-show").innerHTML = soil.detectedVal;
+      });
+      if (soil.detectedVal <= 60) {
+        buzzer.play(buzzer_music([  {notes : ["E3","G4","C5","E5","B2","G4","B4","D5","C3","E4","A4","C5","G2","E4","G4","B4","A2","C4","F4","A4","E1","C4","E4","G4","A2","D4","F4","A4","B2","D4","G4","B4","E3","E5","F5","G5","E5","F5","G5","G4","A4","B4","C5","D5","E5","F5","E5","C5","D5","E5","E4","F4","G4","A4","G4","F4","G4","F4","F4","G4","F4","A4","G4","F4","E4","D4","E4","D4","C4","D4","E4","F4","G4","A4","F4","A4","G4","A4","B4","C5","G4","A4","B4","C5","D5","E5","F5","G5","E5","C5","D5","E5","D5","C5","D5","B4","C5","D5","E5","D5","C5","B4","C5","A4","B4","C5","C4","D4","E4","F4","E4","D4","E4","C5","B4","C5","A4","C5","B4","A4","G4","F4","G4","F4","E4","F4","G4","A4","B4","C5","A4","C5","B4","C5","B4","A4","B4","C5","D5","C5","B4","C5","A4","B4"] , tempos : ["6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","8","8","6","8","8","8","8","8","8","8","8","8","8 ","6","8","8","6","8","8","8","8","8","8","8","8","8","8","6","8","8","6","8","8","8","8","8","8","8","8","8","8","6","8","8","6","8","8","8","8","8","8","8","8","8","8","6","8","8"," 6","8","8","8","8","8","8","8","8","8","8","6","8","8","6","8","8","8","8","8","8","8","8","8","8","6","8","8","6","8","8","8","8","8","8","8","8","8","8","6","8","8","6","8","8","8 ","8","8","8","8","8","8","8"] }]).notes ,buzzer_music([  {notes : ["E3","G4","C5","E5","B2","G4","B4","D5","C3","E4","A4","C5","G2","E4","G4","B4","A2","C4","F4","A4","E1","C4","E4","G4","A2","D4","F4","A4","B2","D4","G4","B4","E3","E5","F5","G5","E5","F5","G5","G4","A4","B4","C5","D5","E5","F5","E5","C5","D5","E5","E4","F4","G4","A4","G4","F4","G4","F4","F4","G4","F4","A4","G4","F4","E4","D4","E4","D4","C4","D4","E4","F4","G4","A4","F4","A4","G4","A4","B4","C5","G4","A4","B4","C5","D5","E5","F5","G5","E5","C5","D5","E5","D5","C5","D5","B4","C5","D5","E5","D5","C5","B4","C5","A4","B4","C5","C4","D4","E4","F4","E4","D4","E4","C5","B4","C5","A4","C5","B4","A4","G4","F4","G4","F4","E4","F4","G4","A4","B4","C5","A4","C5","B4","C5","B4","A4","B4","C5","D5","C5","B4","C5","A4","B4"] , tempos : ["6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","6","8","8","6","8","8","8","8","8","8","8","8","8","8 ","6","8","8","6","8","8","8","8","8","8","8","8","8","8","6","8","8","6","8","8","8","8","8","8","8","8","8","8","6","8","8","6","8","8","8","8","8","8","8","8","8","8","6","8","8"," 6","8","8","8","8","8","8","8","8","8","8","6","8","8","6","8","8","8","8","8","8","8","8","8","8","6","8","8","6","8","8","8","8","8","8","8","8","8","8","6","8","8","6","8","8","8 ","8","8","8","8","8","8","8"] }]).tempos );
+        matrix.animateStop();
+        matrix.on("0000000000000000");
+        matrix.on("0000364640463600");
+      } else {
+        buzzer.play(buzzer_music([  {notes : ["A3","A3","B3","B3","B3","B3","CS4","A3","A3","FS3","A3","A3","A3","B3","B3","B3","B3","B3","CS4","A3","A3","D4","CS4","B3","B3 ","B3","B3","B3","A3","B3","CS4","A3","0","B3","A3","E4","E4","E4","E4","E4","E4","E4","CS4","B3","A3","A3","CS4","CS4","CS4","CS4 ","CS4","CS4","CS4","CS4","CS4","CS4","A3","FS3","FS3","A3","A3","A3","A3","B3","B3","B3","A3","CS4","CS4"] , tempos : ["6","6","6","6","6","6","4","4","4","6","3","6","6","6","6","6","6","6","6","2","6","4","6","4","6","6","6","6","6","6","6","2","3","4","4","6","4","4","4","6","6","6","4","6","6","4 ","6","4","4","4","6","6","6","6","6","4","6","9","4","6","4","6","6","4","6","6","5","5","2"] }]).notes ,buzzer_music([  {notes : ["A3","A3","B3","B3","B3","B3","CS4","A3","A3","FS3","A3","A3","A3","B3","B3","B3","B3","B3","CS4","A3","A3","D4","CS4","B3","B3 ","B3","B3","B3","A3","B3","CS4","A3","0","B3","A3","E4","E4","E4","E4","E4","E4","E4","CS4","B3","A3","A3","CS4","CS4","CS4","CS4 ","CS4","CS4","CS4","CS4","CS4","CS4","A3","FS3","FS3","A3","A3","A3","A3","B3","B3","B3","A3","CS4","CS4"] , tempos : ["6","6","6","6","6","6","4","4","4","6","3","6","6","6","6","6","6","6","6","2","6","4","6","4","6","6","6","6","6","6","6","2","3","4","4","6","4","4","4","6","6","6","4","6","6","4 ","6","4","4","4","6","6","6","6","6","4","6","9","4","6","4","6","6","4","6","6","5","5","2"] }]).tempos );
+        matrix.animateStop();
+        matrix.on("0000000000000000");
+        matrix.on("0000661610166600");
+      }
+            console.log(event.results[result.resultLength]);
+          }
+                }else if(event.results[result.resultLength].isFinal===true){
+          console.log("final");
+        }
+      };
+      window._recognition.start();
+    }
+  }
+  speechRecognition();
+});
